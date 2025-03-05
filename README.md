@@ -50,6 +50,7 @@ GoCICa provides two options for cache storage:
 All settings are automatically read from environment variables set in GitHub Actions.
 Therefore, there is no need to configure anything.
 
+#### Example workflow configuration
 ```yaml
 steps:
   - uses: gocica-go/gocica-action@v1
@@ -86,6 +87,7 @@ You can create an IAM policy using the [Visual Editor](https://docs.aws.amazon.c
 }
 ```
 
+#### Example workflow configuration
 ```yaml
 steps:
   - uses: gocica-go/gocica-action@v1
