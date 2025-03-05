@@ -1,39 +1,39 @@
-import globals from 'globals'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import js from '@eslint/js'
-import { FlatCompat } from '@eslint/eslintrc'
+import globals from "globals";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import js from "@eslint/js";
+import { FlatCompat } from "@eslint/eslintrc";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
   baseDirectory: __dirname,
   recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all
-})
+  allConfig: js.configs.all,
+});
 
 export default [
   ...compat.extends(
-    'eslint:recommended',
-    'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended'
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended",
   ),
   {
     languageOptions: {
       globals: {
-        ...globals.browser
+        ...globals.browser,
       },
 
       ecmaVersion: 5,
-      sourceType: 'module',
+      sourceType: "module",
 
       parserOptions: {
-        parser: '@typescript-eslint/parser'
-      }
+        parser: "@typescript-eslint/parser",
+      },
     },
 
     rules: {
-      'no-debugger': 'warn'
-    }
-  }
-]
+      "no-debugger": "warn",
+    },
+  },
+];
