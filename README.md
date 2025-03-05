@@ -81,7 +81,7 @@ steps:
 | `version` | The version of GoCICa to use. If not specified, the latest version will be used. | No | `latest` |
 | `dir` | Directory to store cache files | No | |
 | `log-level` | Log level (`debug`, `info`, `warn`, `error`, `silent`) | No | `info` |
-| `remote` | Remote backend (`s3`, `github`) | No | `GitHub` |
+| `remote` | Remote backend (`s3`, `github`) | No | `github` |
 | `s3-region` | AWS region for S3 backend | No | |
 | `s3-bucket` | S3 bucket name for S3 backend | No | |
 | `s3-access-key` | AWS access key for S3 backend | No | |
