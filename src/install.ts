@@ -1,7 +1,8 @@
 import * as core from "@actions/core";
 import * as tc from "@actions/tool-cache";
-import { chmod } from "fs/promises";
+import { chmod, rename } from "fs/promises";
 import os from "os";
+import path from "path";
 
 /**
  * Install GoCICa.
@@ -19,8 +20,16 @@ export async function install(): Promise<string> {
 
   core.info(`Downloading binary ${assetURL} ...`);
 
-  const binPath = await tc.downloadTool(assetURL);
-  await chmod(binPath, 0o755);
+  let binPath = await tc.downloadTool(assetURL);
+  if (os.platform() === "win32") {
+    if (path.extname(binPath) !== ".exe") {
+      const newBinPath = binPath + ".exe";
+      await rename(binPath, newBinPath);
+      binPath = newBinPath;
+    }
+  } else {
+    chmod(binPath, 0o755);
+  }
 
   core.info(`Installed GoCICa into ${binPath} in ${Date.now() - startedAt}ms`);
 
