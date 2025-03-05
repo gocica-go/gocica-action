@@ -1,5 +1,6 @@
 import * as core from "@actions/core";
 import * as tc from "@actions/tool-cache";
+import { chmod } from "fs/promises";
 import os from "os";
 
 /**
@@ -19,6 +20,7 @@ export async function install(): Promise<string> {
   core.info(`Downloading binary ${assetURL} ...`);
 
   const binPath = await tc.downloadTool(assetURL);
+  await chmod(binPath, 0o755);
 
   core.info(`Installed GoCICa into ${binPath} in ${Date.now() - startedAt}ms`);
 

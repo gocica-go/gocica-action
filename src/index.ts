@@ -10,7 +10,6 @@ const execAsync = promisify(exec);
 
 try {
   const binPath = await install();
-  core.addPath(path.dirname(binPath));
 
   const { stdout, stderr } = await execAsync(`${binPath} -h`, {});
   if (stdout) {
