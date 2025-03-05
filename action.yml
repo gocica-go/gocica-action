@@ -2,13 +2,11 @@ name: 'GoCICa'
 description: 'Official GoCICa action for installing and setup GoCICa'
 author: 'GoCICa'
 inputs:
-  who-to-greet:  # id of input
-    description: 'Who to greet'
-    required: true
-    default: 'World'
-outputs:
-  time: # id of output
-    description: 'The time we greeted you'
+  version:
+    description: |
+      The version of golangci-lint to use.
+      If not specified, the latest version will be used.
+    required: false
 runs:
   using: 'node20'
   main: 'dist/index.mjs'
