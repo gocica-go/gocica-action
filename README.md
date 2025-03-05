@@ -35,15 +35,15 @@ The action supports multiple platforms (Linux, macOS, Windows) and architectures
 
 GoCICa provides two options for cache storage:
 - GitHub Actions Cache
-    - Uses the built-in GitHub Actions caching mechanism
-    - Zero configuration required
-    - High performance
-    - Not available for self-hosted runners
+  - Uses the built-in GitHub Actions caching mechanism
+  - Zero configuration required
+  - High performance
+  - Not available for self-hosted runners
 - S3 Compatible Storage
-    - Store cache in any S3-compatible storage service
-    - Requires your own S3 bucket and credentials
-    - Good performance, though slightly slower than GitHub Actions Cache
-    - Works with self-hosted runners
+  - Store cache in any S3-compatible storage service
+  - Requires your own S3 bucket and credentials
+  - Good performance, though slightly slower than GitHub Actions Cache
+  - Works with self-hosted runners
 
 ### Using GitHub Actions Cache
 
@@ -57,11 +57,34 @@ steps:
 
 ### Using S3 Compatible Storage
 
-The S3 account requires the following permissions on the target bucket:
-- `s3:GetObject`
-- `s3:PutObject`
-- `s3:DeleteObject`
-- `s3:ListBucket`
+The S3 account requires the following permissions on the target bucket. See [Amazon S3 Actions](https://docs.aws.amazon.com/IAM/latest/UserGuide/list_amazons3.html#amazons3-actions-as-permissions) for more details:
+- `s3:GetObject` - Read cache objects
+- `s3:PutObject` - Write cache objects
+- `s3:DeleteObject` - Clean up old cache objects
+- `s3:ListBucket` - List cache objects in bucket
+
+You can create an IAM policy using the [Visual Editor](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_create-console.html) or use this JSON policy:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::your-bucket-name",
+                "arn:aws:s3:::your-bucket-name/*"
+            ]
+        }
+    ]
+}
+```
 
 ```yaml
 steps:
@@ -82,10 +105,10 @@ steps:
 | `dir` | Directory to store cache files | No | |
 | `log-level` | Log level (`debug`, `info`, `warn`, `error`, `silent`) | No | `info` |
 | `remote` | Remote backend (`s3`, `github`) | No | `github` |
-| `s3-region` | AWS region for S3 backend | No | |
+| `s3-region` | AWS region for S3 backend (see [Available Regions](https://docs.aws.amazon.com/general/latest/gr/s3.html)) | No | |
 | `s3-bucket` | S3 bucket name for S3 backend | No | |
 | `s3-access-key` | AWS access key for S3 backend | No | |
 | `s3-secret-access-key` | AWS secret access key for S3 backend | No | |
-| `s3-endpoint` | S3 endpoint | No | `s3.amazonaws.com` |
-| `s3-disable-ssl` | Disable SSL for S3 connection | No | `false` |
-| `s3-use-path-style` | Use path style for S3 connection | No | `false` |
+| `s3-endpoint` | S3 endpoint (see [S3 Endpoints](https://docs.aws.amazon.com/general/latest/gr/s3.html)) | No | `s3.amazonaws.com` |
+| `s3-disable-ssl` | Disable SSL for S3 connection (Not recommended for production) | No | `false` |
+| `s3-use-path-style` | Use path style for S3 connection (see [Path Style vs Virtual Hosted Style](https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html)) | No | `false` |
