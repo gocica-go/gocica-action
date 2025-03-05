@@ -6,7 +6,6 @@
   "main": "dist/index.mjs",
   "scripts": {
     "build": "tsx build.ts",
-    "start": "node dist/index.mjs",
     "lint": "eslint --cache src",
     "type-check": "tsc"
   },

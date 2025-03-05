@@ -1,0 +1,121 @@
+name: Pull Request CI
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - auto_merge_enabled
+
+env:
+  NODE_VERSION: "22"
+
+permissions:
+  checks: write
+  contents: write
+  pull-requests: read
+
+jobs:
+  packages:
+    name: Packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: ./pnpm-lock.yaml
+      - run: pnpm ci
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [packages]
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: ./pnpm-lock.yaml
+      - run: pnpm ci
+      - run: pnpm run build
+        env:
+          NODE_ENV: production
+      - name: Check and commit dist
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ -n $(git status --porcelain dist/index.mjs) ]]; then
+            git add dist/index.mjs
+            git commit -m "chore: update dist/index.mjs"
+            git push
+          fi
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    needs: [packages]
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: ./pnpm-lock.yaml
+      - run: pnpm ci
+      - uses: actions/cache@v4
+        with:
+          path: node_modules/.cache/eslint
+          key: ${{ runner.os }}-eslint-${{ hashFiles('eslint.config.mjs') }}
+      - uses: reviewdog/action-eslint@v1
+        with:
+          fail_level: error
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          reporter: github-pr-review
+          eslint_flags: "--ignore-pattern .gitignore --max-warnings=0 --cache --cache-location ./node_modules/.cache/eslint ."
+  type_check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    needs: [packages]
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: ./pnpm-lock.yaml
+      - run: pnpm ci
+      - run: pnpm run type-check
+  gocica_run:
+    name: A job to run GoCICa action
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        remote:
+          - "github"
+          - "s3"
+          - "none"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.24.x
+          cache: false
+      - name: GoCICa action
+        uses: ./
+        with:
+          s3-region: ${{ secrets.S3_REGION }}
+          s3-bucket: ${{ secrets.S3_BUCKET }}
+          s3-access-key: ${{ secrets.S3_ACCESS_KEY }}
+          s3-secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+      - name: Build standard library
+        run: go install std
