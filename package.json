@@ -1,0 +1,34 @@
+{
+  "name": "gocica-action",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "dist/index.mjs",
+  "scripts": {
+    "build": "tsx build.ts",
+    "start": "node dist/index.mjs",
+    "lint": "eslint --cache src",
+    "type-check": "tsc"
+  },
+  "keywords": [],
+  "author": "GoCICa",
+  "license": "MIT",
+  "packageManager": "pnpm@10.5.2",
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "@typescript-eslint/eslint-plugin": "^8.23.0",
+    "@typescript-eslint/parser": "^8.23.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "commander": "^13.1.0",
+    "zod": "^3.24.2"
+  }
+}
