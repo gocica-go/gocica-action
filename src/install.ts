@@ -57,5 +57,8 @@ function getAssetURL(version: string): string {
       break;
   }
 
-  return `https://github.com/gocica-go/gocica/releases/download/${version}/gocica_${platform}-${arch}${ext}`;
+  if (version === "latest") {
+    return `https://github.com/gocica-go/gocica/releases/latest/download/gocica_${platform}_${arch}${ext}`;
+  }
+  return `https://github.com/gocica-go/gocica/releases/download/${version}/gocica_${platform}_${arch}${ext}`;
 }
