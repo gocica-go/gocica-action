@@ -10,10 +10,8 @@ const execAsync = promisify(exec);
 
 try {
   const binPath = await install();
-  core.addPath(path.dirname(binPath));
 
-  const { stdout, stderr } = await execAsync("gocica -h", {});
-
+  const { stdout, stderr } = await execAsync(`${binPath} -h`, {});
   if (stdout) {
     core.info(stdout);
   }
