@@ -4,9 +4,46 @@ author: 'GoCICa'
 inputs:
   version:
     description: |
-      The version of golangci-lint to use.
+      The version of GoCICa to use.
       If not specified, the latest version will be used.
     required: false
+    default: 'latest'
+  dir:
+    description: 'Directory to store cache files'
+    required: false
+  log-level:
+    description: 'Log level'
+    required: false
+    default: 'info'
+  remote:
+    description: 'Remote backend'
+    required: false
+    default: 'github'
+  # S3 settings
+  s3-region:
+    description: 'AWS region'
+    required: false
+  s3-bucket:
+    description: 'S3 bucket name'
+    required: false
+  s3-access-key:
+    description: 'AWS access key'
+    required: false
+  s3-secret-access-key:
+    description: 'AWS secret access key'
+    required: false
+  s3-endpoint:
+    description: 'S3 endpoint'
+    required: false
+    default: 's3.amazonaws.com'
+  s3-disable-ssl:
+    description: 'Disable SSL for S3 connection'
+    required: false
+    default: 'false'
+  s3-use-path-style:
+    description: 'Use path style for S3 connection'
+    required: false
+    default: 'false'
 runs:
   using: 'node20'
   main: 'dist/index.mjs'
