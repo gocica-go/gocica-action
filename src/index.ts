@@ -66,6 +66,11 @@ try {
   const command = flags.length > 0 ? `${binPath} ${flags.join(" ")}` : binPath;
 
   core.exportVariable("GOCACHEPROG", command);
+  core.exportVariable(
+    "ACTIONS_RUNTIME_TOKEN",
+    process.env.ACTIONS_RUNTIME_TOKEN
+  );
+  core.exportVariable("ACTIONS_RESULTS_URL", process.env.ACTIONS_RESULTS_URL);
 } catch (error) {
   const err = error as Error;
   core.error(`Failed to run: ${error}, ${err.stack}`);
