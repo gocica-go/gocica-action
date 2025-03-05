@@ -28,7 +28,7 @@ export async function install(): Promise<string> {
       binPath = newBinPath;
     }
   } else {
-    chmod(binPath, 0o755);
+    await chmod(binPath, 0o755);
   }
 
   core.info(`Installed GoCICa into ${binPath} in ${Date.now() - startedAt}ms`);
