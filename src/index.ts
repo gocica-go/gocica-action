@@ -68,7 +68,7 @@ try {
   core.exportVariable("GOCACHEPROG", command);
   core.exportVariable(
     "ACTIONS_RUNTIME_TOKEN",
-    process.env.ACTIONS_RUNTIME_TOKEN
+    process.env.ACTIONS_RUNTIME_TOKEN,
   );
   core.exportVariable("ACTIONS_RESULTS_URL", process.env.ACTIONS_RESULTS_URL);
 } catch (error) {
