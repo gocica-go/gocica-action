@@ -1,15 +1,16 @@
 import core from "@actions/core";
 
-import path from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
 
 import { install } from "./install";
+import path from "path";
 
 const execAsync = promisify(exec);
 
 try {
   const binPath = await install();
+  core.addPath(path.dirname(binPath));
 
   const { stdout, stderr } = await execAsync(`${binPath} -h`, {});
   if (stdout) {
