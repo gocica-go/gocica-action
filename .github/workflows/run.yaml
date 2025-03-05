@@ -2,10 +2,23 @@ on: [push]
 
 jobs:
   gocica_run:
-    runs-on: ubuntu-latest
     name: A job to run GoCICa action
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+          - ubuntu-22.04-arm
+          - macos-latest
+          - windows-latest
+        version:
+          - ""
+          - "latest"
+          - "v0.1.0-alpha2"
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: GoCICa action
         uses: ./
+        with:
+          version: ${{ matrix.version }}
