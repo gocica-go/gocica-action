@@ -18,7 +18,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-
       - name: Update the ${{ env.TAG_NAME }} tag
         uses: actions/publish-action@v0.3.0
         with:
