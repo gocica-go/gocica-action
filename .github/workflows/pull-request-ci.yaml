@@ -76,7 +76,7 @@ jobs:
           key: ${{ runner.os }}-eslint-${{ hashFiles('eslint.config.mjs') }}
       - uses: reviewdog/action-eslint@v1
         with:
-          fail_level: error
+          level: error
           github_token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
           eslint_flags: "--ignore-pattern .gitignore --max-warnings=0 --cache --cache-location ./node_modules/.cache/eslint ."
