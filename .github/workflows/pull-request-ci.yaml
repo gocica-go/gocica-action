@@ -55,6 +55,7 @@ jobs:
           if [[ -n $(git status --porcelain dist/index.mjs) ]]; then
             git add dist/index.mjs
             git commit -m "chore: update dist/index.mjs"
+            git pull --rebase origin ${{ github.head_ref || github.ref_name }}
             git push origin HEAD:${{ github.head_ref || github.ref_name }}
           fi
   lint:
