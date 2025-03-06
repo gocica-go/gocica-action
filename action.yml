@@ -1,4 +1,4 @@
-name: 'GoCICa'
+name: 'GoCICa Setup'
 description: 'Official GoCICa action for installing and setup GoCICa'
 author: 'GoCICa'
 inputs:
