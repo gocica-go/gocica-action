@@ -1,6 +1,9 @@
 name: 'GoCICa Setup'
 description: 'Official GoCICa action for installing and setup GoCICa'
 author: 'GoCICa'
+branding:
+  icon: 'battery-charging'
+  color: 'blue'
 inputs:
   version:
     description: |
