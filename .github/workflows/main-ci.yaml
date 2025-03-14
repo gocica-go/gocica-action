@@ -17,12 +17,7 @@ jobs:
           - windows-latest
         version:
           - ""
-          - "latest"
-          - "v0.1.0-alpha2"
-        remote:
-          - "github"
-          - "s3"
-          - "none"
+          - "v0.1.0-alpha6"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -35,9 +30,5 @@ jobs:
         uses: ./
         with:
           version: ${{ matrix.version }}
-          s3-region: ${{ secrets.S3_REGION }}
-          s3-bucket: ${{ secrets.S3_BUCKET }}
-          s3-access-key: ${{ secrets.S3_ACCESS_KEY }}
-          s3-secret-access-key: ${{ secrets.S3_SECRET_ACCESS_KEY }}
       - name: Build standard library
         run: go install std
