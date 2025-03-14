@@ -10,7 +10,7 @@ import path from "path";
  * @returns             path to installed binary of GoCICa.
  */
 export async function install(): Promise<string> {
-  const version = core.getInput("version") || "latest";
+  const version = core.getInput("version");
 
   core.info(`Installing GoCICa binary ${version}...`);
 
@@ -68,8 +68,5 @@ function getAssetURL(version: string): string {
       break;
   }
 
-  if (version === "latest") {
-    return `https://github.com/gocica-go/gocica/releases/latest/download/gocica_${platform}_${arch}${ext}`;
-  }
   return `https://github.com/gocica-go/gocica/releases/download/${version}/gocica_${platform}_${arch}${ext}`;
 }
