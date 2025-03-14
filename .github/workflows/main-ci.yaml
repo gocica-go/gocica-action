@@ -15,9 +15,6 @@ jobs:
           - ubuntu-22.04-arm
           - macos-latest
           - windows-latest
-        version:
-          - ""
-          - "v0.1.0-alpha6"
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -28,7 +25,5 @@ jobs:
           cache: false
       - name: GoCICa action
         uses: ./
-        with:
-          version: ${{ matrix.version }}
       - name: Build standard library
         run: go install std
