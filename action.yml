@@ -10,7 +10,7 @@ inputs:
       The version of GoCICa to use.
       If not specified, the latest version will be used.
     required: false
-    default: 'v0.1.0-alpha6'
+    default: 'v0.1.0-alpha7'
   dir:
     description: 'Directory to store cache files'
     required: false
