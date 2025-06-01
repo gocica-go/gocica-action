@@ -1,38 +1,28 @@
 import globals from "globals";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-  allConfig: js.configs.all,
-});
+import tseslint from "@typescript-eslint/eslint-plugin";
+import tsparser from "@typescript-eslint/parser";
+import prettier from "eslint-plugin-prettier";
+import eslintConfigPrettier from "eslint-config-prettier";
 
 export default [
-  ...compat.extends(
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:prettier/recommended",
-  ),
+  js.configs.recommended,
   {
+    files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
       globals: {
-        ...globals.browser,
+        ...globals.node,
       },
-
-      ecmaVersion: 5,
       sourceType: "module",
-
-      parserOptions: {
-        parser: "@typescript-eslint/parser",
-      },
+      parser: tsparser,
     },
-
+    plugins: {
+      "@typescript-eslint": tseslint,
+      prettier: prettier,
+    },
     rules: {
+      ...tseslint.configs.recommended.rules,
+      ...eslintConfigPrettier.rules,
       "no-debugger": "warn",
     },
   },
