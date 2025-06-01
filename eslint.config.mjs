@@ -1,29 +1,12 @@
-import globals from "globals";
 import js from "@eslint/js";
-import tseslint from "@typescript-eslint/eslint-plugin";
-import tsparser from "@typescript-eslint/parser";
-import prettier from "eslint-plugin-prettier";
-import eslintConfigPrettier from "eslint-config-prettier";
+import tseslint from "typescript-eslint";
+import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 
-export default [
+export default tseslint.config(
   js.configs.recommended,
+  tseslint.configs.recommended,
+  eslintPluginPrettierRecommended,
   {
-    files: ["**/*.ts", "**/*.tsx"],
-    languageOptions: {
-      globals: {
-        ...globals.node,
-      },
-      sourceType: "module",
-      parser: tsparser,
-    },
-    plugins: {
-      "@typescript-eslint": tseslint,
-      prettier: prettier,
-    },
-    rules: {
-      ...tseslint.configs.recommended.rules,
-      ...eslintConfigPrettier.rules,
-      "no-debugger": "warn",
-    },
+    ignores: ["node_modules", "dist"],
   },
-];
+);
