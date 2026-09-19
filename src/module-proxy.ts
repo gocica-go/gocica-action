@@ -58,7 +58,17 @@ export async function startModuleProxy(
   });
   child.unref();
 
-  const state = await waitForProxy(stateFile);
+  // A gocica too old to know the `serve` subcommand exits straight away. Without
+  // this the action would sit out the whole health timeout for nothing.
+  let exited = false;
+  child.once("exit", () => {
+    exited = true;
+  });
+  child.once("error", () => {
+    exited = true;
+  });
+
+  const state = await waitForProxy(stateFile, () => exited);
   if (!state) {
     core.warning(
       `GoCICa module proxy did not come up; see ${logFile}. Continuing without it.`,
@@ -78,10 +88,17 @@ export async function startModuleProxy(
   core.info(`GoCICa module proxy listening on ${state.url}`);
 }
 
-async function waitForProxy(stateFile: string): Promise<ProxyState | null> {
+async function waitForProxy(
+  stateFile: string,
+  exited: () => boolean,
+): Promise<ProxyState | null> {
   const deadline = Date.now() + HEALTH_TIMEOUT_MS;
 
   while (Date.now() < deadline) {
+    if (exited()) {
+      return null;
+    }
+
     const state = readState(stateFile);
     if (state) {
       try {
