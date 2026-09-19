@@ -11,6 +11,11 @@ inputs:
       If not specified, the latest version will be used.
     required: false
     default: 'v0.1.0-alpha10'
+  binary-path:
+    description: |
+      Path to an existing gocica binary to use instead of downloading a release.
+      Intended for benchmarking unreleased builds.
+    required: false
   dir:
     description: 'Directory to store cache files'
     required: false
@@ -18,6 +23,25 @@ inputs:
     description: 'Log level'
     required: false
     default: 'info'
+  module-proxy:
+    description: |
+      Serve the Go module cache over GOPROXY, replacing actions/setup-go's cache.
+      Set actions/setup-go's `cache: false` when this is on.
+    required: false
+    default: 'true'
+  upstream-proxy:
+    description: |
+      Proxy to fetch module cache misses from. Defaults to the ambient GOPROXY.
+    required: false
+  clean-module-cache:
+    description: |
+      Run `go clean -modcache` before the build. Only useful for benchmarking a
+      cold module cache; it would throw away a cache restored by another action.
+    required: false
+    default: 'false'
 runs:
   using: 'node20'
   main: 'dist/index.mjs'
+  # always(), so a failed build still flushes what it managed to fetch.
+  post: 'dist/post.mjs'
+  post-if: always()

@@ -10,6 +10,19 @@ import path from "path";
  * @returns             path to installed binary of GoCICa.
  */
 export async function install(): Promise<string> {
+  // A local binary short-circuits the download. This is what lets a workflow
+  // benchmark an unreleased build: everything else about the action stays the
+  // same.
+  const binaryPath = core.getInput("binary-path");
+  if (binaryPath) {
+    core.info(`Using GoCICa binary at ${binaryPath}`);
+    if (os.platform() !== "win32") {
+      await chmod(binaryPath, 0o755);
+    }
+
+    return binaryPath;
+  }
+
   const version = core.getInput("version");
 
   core.info(`Installing GoCICa binary ${version}...`);

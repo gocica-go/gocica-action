@@ -1,14 +1,22 @@
 import * as core from "@actions/core";
 import { getExecOutput } from "@actions/exec";
 
-const cacheClearCmd = "go clean -cache";
-
 export const clearDefaultCache = async () => {
-  core.info(`Clearing default cache...`);
+  const commands = ["go clean -cache"];
 
-  const { stderr, exitCode } = await getExecOutput(cacheClearCmd);
+  // Only for benchmarking a cold module cache. Off by default: it would throw
+  // away a module cache another action deliberately restored.
+  if (core.getBooleanInput("clean-module-cache")) {
+    commands.push("go clean -modcache");
+  }
 
-  if (exitCode !== 0) {
-    core.error(`Failed to clear default cache(code: ${exitCode}): ${stderr}`);
+  for (const cmd of commands) {
+    core.info(`Running ${cmd}...`);
+
+    const { stderr, exitCode } = await getExecOutput(cmd);
+
+    if (exitCode !== 0) {
+      core.error(`Failed to run ${cmd} (code: ${exitCode}): ${stderr}`);
+    }
   }
 };
