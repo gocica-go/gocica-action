@@ -21,7 +21,9 @@ function buildFlags(dir: string): string[] {
 }
 
 try {
-  const dir = core.getInput("dir");
+  // Resolve the directory once, so the cacheprog and the module proxy always
+  // agree on where the cache lives.
+  const dir = core.getInput("dir") || defaultDir();
   const logLevel = core.getInput("log-level") || "info";
   const moduleProxy = core.getBooleanInput("module-proxy");
 
@@ -39,9 +41,8 @@ try {
     core.exportVariable("ACTIONS_RESULTS_URL", process.env.ACTIONS_RESULTS_URL);
 
     if (moduleProxy) {
-      // The daemon needs a directory of its own; gocica puts the module store
-      // under <dir>/mod.
-      await startModuleProxy(binPath, dir || defaultDir(), logLevel);
+      // gocica puts the module store under <dir>/mod.
+      await startModuleProxy(binPath, dir, logLevel);
     }
   })();
 
