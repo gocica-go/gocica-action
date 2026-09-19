@@ -8,12 +8,18 @@ import path from "path";
 export const STATE_BINARY = "gocica-binary";
 export const STATE_STATE_FILE = "gocica-state-file";
 
-const HEALTH_TIMEOUT_MS = 30_000;
+// Generous: it covers restoring the module cache, not just opening a socket.
+const HEALTH_TIMEOUT_MS = 300_000;
 const POLL_INTERVAL_MS = 100;
 
 interface ProxyState {
   pid: number;
   url: string;
+}
+
+interface Health {
+  ok: boolean;
+  ready: boolean;
 }
 
 /**
@@ -104,7 +110,13 @@ async function waitForProxy(
       try {
         const res = await fetch(`${state.url}/-/healthz`);
         if (res.ok) {
-          return state;
+          // Readiness, not liveness: the daemon restores modules into GOMODCACHE
+          // in extracted form, and the go command must not start extracting into
+          // the same directories while it does.
+          const health = (await res.json()) as Health;
+          if (health.ready) {
+            return state;
+          }
         }
       } catch {
         // Not listening yet.
