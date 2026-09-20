@@ -2,7 +2,7 @@ import core from "@actions/core";
 
 import { install } from "./install";
 import { clearDefaultCache } from "./clear-default-cache";
-import { startModuleProxy } from "./module-proxy";
+import { startModuleProxy, parseWaitFor } from "./module-proxy";
 
 function buildFlags(dir: string): string[] {
   const flags: string[] = [];
@@ -21,11 +21,14 @@ function buildFlags(dir: string): string[] {
 }
 
 try {
+  const logLevel = core.getInput("log-level") || "info";
+  const moduleProxy = core.getBooleanInput("module-proxy");
+  const waitFor = parseWaitFor(core.getInput("wait-for"));
+
   // Resolve the directory once, so the cacheprog and the module proxy always
   // agree on where the cache lives.
   const dir = core.getInput("dir") || defaultDir();
-  const logLevel = core.getInput("log-level") || "info";
-  const moduleProxy = core.getBooleanInput("module-proxy");
+  const goModCache = process.env.GOMODCACHE || "";
 
   const installPromise = (async () => {
     const binPath = await install();
@@ -42,7 +45,7 @@ try {
 
     if (moduleProxy) {
       // gocica puts the module store under <dir>/mod.
-      await startModuleProxy(binPath, dir, logLevel);
+      await startModuleProxy(binPath, dir, logLevel, { goModCache, waitFor });
     }
   })();
 

@@ -39,6 +39,15 @@ inputs:
       cold module cache; it would throw away a cache restored by another action.
     required: false
     default: 'false'
+  wait-for:
+    description: |
+      How far the step waits before it returns: `ready` (every cache restored;
+      the next step can run the go command) or `listening` (return as soon as
+      GOPROXY is known, so the warm-up overlaps the following steps, typically
+      actions/setup-go). With `listening`, run `gocica-go/gocica-action/ready`
+      before the first go command.
+    required: false
+    default: 'ready'
 runs:
   using: 'node20'
   main: 'dist/index.mjs'

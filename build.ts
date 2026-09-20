@@ -2,7 +2,7 @@ import esbuild from "esbuild";
 
 await esbuild.build({
   bundle: true,
-  entryPoints: ["./src/index.ts", "./src/post.ts"],
+  entryPoints: ["./src/index.ts", "./src/post.ts", "./src/ready.ts"],
   outdir: "./dist",
   outExtension: {
     ".js": ".mjs",
