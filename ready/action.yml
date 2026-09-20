@@ -1,0 +1,12 @@
+name: 'GoCICa Ready'
+description: |
+  Wait until the GoCICa module proxy has restored its caches. Only needed after
+  gocica-go/gocica-action ran with `wait-for: listening`; run it before the
+  first go command.
+author: 'GoCICa'
+branding:
+  icon: 'battery-charging'
+  color: 'blue'
+runs:
+  using: 'node20'
+  main: '../dist/ready.mjs'

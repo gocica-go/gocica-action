@@ -1,8 +1,10 @@
 import core from "@actions/core";
+import path from "path";
 
 import { install } from "./install";
 import { clearDefaultCache } from "./clear-default-cache";
-import { startModuleProxy } from "./module-proxy";
+import { startModuleProxy, parseWaitFor } from "./module-proxy";
+import { mountTmpfs } from "./tmpfs";
 
 function buildFlags(dir: string): string[] {
   const flags: string[] = [];
@@ -21,11 +23,35 @@ function buildFlags(dir: string): string[] {
 }
 
 try {
-  // Resolve the directory once, so the cacheprog and the module proxy always
-  // agree on where the cache lives.
-  const dir = core.getInput("dir") || defaultDir();
   const logLevel = core.getInput("log-level") || "info";
   const moduleProxy = core.getBooleanInput("module-proxy");
+  const waitFor = parseWaitFor(core.getInput("wait-for"));
+
+  // The mount comes first: where the caches live decides everything below.
+  const mount = await mountTmpfs();
+
+  // Resolve the directory once, so the cacheprog and the module proxy always
+  // agree on where the cache lives.
+  const dirInput = core.getInput("dir");
+  const dir = dirInput || (mount ? path.join(mount, "gocica") : defaultDir());
+  if (mount && dirInput) {
+    core.info(`dir is set, so the store stays at ${dir} rather than on tmpfs.`);
+  }
+
+  // GOMODCACHE moves onto the tmpfs with the store, unless the workflow put it
+  // somewhere on purpose. Exported before the daemon starts: a detached child
+  // copies the environment at spawn time, and later steps read it from here.
+  let goModCache = process.env.GOMODCACHE || "";
+  if (mount) {
+    if (goModCache) {
+      core.info(
+        `GOMODCACHE is already ${goModCache}; it stays there rather than on tmpfs.`,
+      );
+    } else {
+      goModCache = path.join(mount, "go", "pkg", "mod");
+      core.exportVariable("GOMODCACHE", goModCache);
+    }
+  }
 
   const installPromise = (async () => {
     const binPath = await install();
@@ -42,7 +68,7 @@ try {
 
     if (moduleProxy) {
       // gocica puts the module store under <dir>/mod.
-      await startModuleProxy(binPath, dir, logLevel);
+      await startModuleProxy(binPath, dir, logLevel, { goModCache, waitFor });
     }
   })();
 

@@ -13,8 +13,19 @@ export const clearDefaultCache = async () => {
   for (const cmd of commands) {
     core.info(`Running ${cmd}...`);
 
-    const { stderr, exitCode } = await getExecOutput(cmd);
+    let result;
+    try {
+      result = await getExecOutput(cmd);
+    } catch (error) {
+      // No go command yet: the action is running before actions/setup-go, which
+      // is the point of `wait-for: listening`. There is nothing to clean then.
+      const err = error as Error;
+      core.info(`Skipping ${cmd}: ${err.message}`);
 
+      return;
+    }
+
+    const { stderr, exitCode } = result;
     if (exitCode !== 0) {
       core.error(`Failed to run ${cmd} (code: ${exitCode}): ${stderr}`);
     }

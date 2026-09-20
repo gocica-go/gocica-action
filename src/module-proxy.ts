@@ -8,11 +8,39 @@ import path from "path";
 export const STATE_BINARY = "gocica-binary";
 export const STATE_STATE_FILE = "gocica-state-file";
 
+// gocica's own name for the flag, so `proxy-stop` and the ready action find the
+// daemon through the environment without any state of their own.
+export const ENV_STATE_FILE = "GOCICA_MODULE_PROXY_STATE_FILE";
+
 // Generous: it covers restoring the module cache, not just opening a socket.
 const HEALTH_TIMEOUT_MS = 300_000;
 const POLL_INTERVAL_MS = 100;
 
-interface ProxyState {
+/**
+ * How far the step waits before it returns.
+ *
+ * "ready" is the safe default: every cache is restored and the next step can
+ * run the go command. "listening" returns as soon as GOPROXY is known, so the
+ * warm-up overlaps whatever comes next (actions/setup-go, typically); the
+ * `ready` action then has to run before the first go command.
+ */
+export type WaitFor = "ready" | "listening";
+
+export function parseWaitFor(input: string): WaitFor {
+  switch (input) {
+    case "":
+    case "ready":
+      return "ready";
+    case "listening":
+      return "listening";
+    default:
+      throw new Error(
+        `wait-for must be "ready" or "listening", got ${JSON.stringify(input)}`,
+      );
+  }
+}
+
+export interface ProxyState {
   pid: number;
   url: string;
 }
@@ -20,6 +48,13 @@ interface ProxyState {
 interface Health {
   ok: boolean;
   ready: boolean;
+}
+
+export interface ModuleProxyOptions {
+  // Module cache to restore extracted modules into. Empty leaves it to gocica,
+  // which asks the go command and falls back to the toolchain's default rule.
+  goModCache: string;
+  waitFor: WaitFor;
 }
 
 /**
@@ -35,6 +70,7 @@ export async function startModuleProxy(
   binPath: string,
   dir: string,
   logLevel: string,
+  options: ModuleProxyOptions,
 ): Promise<void> {
   const runnerTemp = process.env.RUNNER_TEMP || os.tmpdir();
   const stateFile = path.join(runnerTemp, "gocica-proxy.json");
@@ -57,6 +93,10 @@ export async function startModuleProxy(
     args.push("--upstream", upstream);
   }
 
+  if (options.goModCache) {
+    args.push("--go-mod-cache", options.goModCache);
+  }
+
   const log = openSync(logFile, "a");
   const child = spawn(binPath, args, {
     detached: true,
@@ -74,7 +114,7 @@ export async function startModuleProxy(
     exited = true;
   });
 
-  const state = await waitForProxy(stateFile, () => exited);
+  const state = await waitForProxy(stateFile, () => exited, options.waitFor);
   if (!state) {
     core.warning(
       `GoCICa module proxy did not come up; see ${logFile}. Continuing without it.`,
@@ -88,15 +128,29 @@ export async function startModuleProxy(
   // so a daemon that dies mid-build cannot break it.
   const previous = process.env.GOPROXY || "https://proxy.golang.org,direct";
   core.exportVariable("GOPROXY", `${state.url}|${previous}`);
+  core.exportVariable(ENV_STATE_FILE, stateFile);
   core.saveState(STATE_STATE_FILE, stateFile);
   core.saveState(STATE_BINARY, binPath);
 
-  core.info(`GoCICa module proxy listening on ${state.url}`);
+  core.info(
+    `GoCICa module proxy ${options.waitFor} on ${state.url}` +
+      (options.waitFor === "listening"
+        ? ". Run gocica-go/gocica-action/ready before the first go command."
+        : ""),
+  );
 }
 
-async function waitForProxy(
+/**
+ * Poll the daemon until it is listening or ready, or until it is gone.
+ *
+ * Readiness, not liveness, is what the go command needs: the daemon restores
+ * modules into GOMODCACHE in extracted form, and the go command must not start
+ * extracting into the same directories while it does.
+ */
+export async function waitForProxy(
   stateFile: string,
   exited: () => boolean,
+  target: WaitFor,
 ): Promise<ProxyState | null> {
   const deadline = Date.now() + HEALTH_TIMEOUT_MS;
 
@@ -110,9 +164,9 @@ async function waitForProxy(
       try {
         const res = await fetch(`${state.url}/-/healthz`);
         if (res.ok) {
-          // Readiness, not liveness: the daemon restores modules into GOMODCACHE
-          // in extracted form, and the go command must not start extracting into
-          // the same directories while it does.
+          if (target === "listening") {
+            return state;
+          }
           const health = (await res.json()) as Health;
           if (health.ready) {
             return state;
@@ -129,10 +183,21 @@ async function waitForProxy(
   return null;
 }
 
-function readState(stateFile: string): ProxyState | null {
+export function readState(stateFile: string): ProxyState | null {
   try {
     return JSON.parse(readFileSync(stateFile, "utf8")) as ProxyState;
   } catch {
     return null;
+  }
+}
+
+/** Whether the daemon recorded in the state file is still running. */
+export function isAlive(state: ProxyState): boolean {
+  try {
+    process.kill(state.pid, 0);
+
+    return true;
+  } catch {
+    return false;
   }
 }
