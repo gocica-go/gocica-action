@@ -48,6 +48,21 @@ inputs:
       before the first go command.
     required: false
     default: 'ready'
+  tmpfs:
+    description: |
+      Put the caches (GOMODCACHE and GoCICa's store) on a RAM-backed tmpfs.
+      Linux only; skipped, with a note, when passwordless sudo is unavailable or
+      less than 8 GiB of memory is available. Restoring the module cache is
+      disk-bound on the runner's OS disk, and in RAM it also stops slowing down
+      everything else that writes to that disk.
+    required: false
+    default: 'false'
+  tmpfs-size:
+    description: |
+      Size limit of the tmpfs mount. A ceiling, not a reservation: tmpfs only
+      takes the memory that is actually written.
+    required: false
+    default: '10g'
 runs:
   using: 'node20'
   main: 'dist/index.mjs'

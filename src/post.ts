@@ -2,6 +2,7 @@ import * as core from "@actions/core";
 import { getExecOutput } from "@actions/exec";
 
 import { STATE_BINARY, STATE_STATE_FILE } from "./module-proxy";
+import { STATE_TMPFS, unmountTmpfs } from "./tmpfs";
 
 // Flush the module cache to the remote and stop the daemon.
 //
@@ -23,6 +24,13 @@ try {
     if (exitCode !== 0) {
       core.warning(`Failed to stop the GoCICa module proxy: ${stderr}`);
     }
+  }
+
+  // After the flush: the store is on it. The cacheprog uploaded its part at the
+  // end of each go command, so nothing else is waiting on these files.
+  const mount = core.getState(STATE_TMPFS);
+  if (mount) {
+    await unmountTmpfs(mount);
   }
 } catch (error) {
   const err = error as Error;
