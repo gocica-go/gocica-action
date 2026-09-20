@@ -10,14 +10,51 @@ Add these steps to your workflow:
 
 ```yaml
 steps:
-  - uses: actions/checkout@v4
-  - uses: actions/setup-go@v5
+  - uses: actions/checkout@v6
+  - uses: actions/setup-go@v6
     with:
       go-version: 1.24.x # Go 1.24 or higher required
-      cache: false # Using GoCICa instead
+      cache: false # GoCICa serves both caches
   - uses: gocica-go/gocica-action@v1
   - run: go build .
 ```
+
+The action exports `GOCACHEPROG` for the build cache, starts a `GOPROXY`
+daemon for the module cache, and flushes both in its post step. Set
+`actions/setup-go`'s `cache: false`: GoCICa replaces that cache entirely.
+
+### Faster warm runs: caches in RAM, daemon before setup-go
+
+Restoring the module cache is tens of thousands of small files, and on the
+runner's OS disk that is disk-bound. Two opt-ins take it off the disk and out
+of the critical path:
+
+```yaml
+steps:
+  - uses: actions/checkout@v6
+  - uses: gocica-go/gocica-action@v1
+    with:
+      tmpfs: true # GOMODCACHE and the store on a RAM-backed mount
+      wait-for: listening # return at once; warm up while setup-go runs
+  - uses: actions/setup-go@v6
+    with:
+      go-version: 1.24.x
+      cache: false
+  - uses: gocica-go/gocica-action/ready@v1 # wait for the restore before go runs
+  - run: go build .
+```
+
+Measured on `ubuntu-latest` against `tailscale/tailscale` (401 modules, 1.1 GB
+build cache), a warm build-only job takes 31-32s this way against 37-43s with
+`actions/setup-go`'s cache; on the OS disk the two are a tie, because the
+daemon's restore and setup-go's toolchain copy wait for the same disk. `tmpfs`
+is Linux only and skipped, with a note in the log, when passwordless sudo is
+missing or less than 8 GiB of memory is available. `ready` is only needed with
+`wait-for: listening`; it never fails the job.
+
+Starting the daemon before the toolchain is installed needs a GoCICa newer
+than `v0.1.0-alpha10`: older ones ask `go env` for `GOMODCACHE` and fall back
+to not restoring the module cache when `go` is missing.
 
 ## Usage
 
@@ -89,8 +126,15 @@ Required [S3 permissions](https://docs.aws.amazon.com/IAM/latest/UserGuide/list_
 | Name | Description | Required | Default |
 |------|-------------|----------|---------|
 | `version` | GoCICa version to use | No | `latest` |
+| `binary-path` | Use this GoCICa binary instead of downloading a release (for benchmarking unreleased builds) | No | |
 | `dir` | Cache file directory | No | |
 | `log-level` | Log level (`debug`, `info`, `warn`, `error`, `silent`) | No | `info` |
+| `module-proxy` | Serve the module cache over `GOPROXY` | No | `true` |
+| `upstream-proxy` | Proxy to fetch module cache misses from | No | the ambient `GOPROXY` |
+| `clean-module-cache` | Run `go clean -modcache` first (benchmarking only) | No | `false` |
+| `wait-for` | `ready` (caches restored) or `listening` (return as soon as `GOPROXY` is known; run `gocica-go/gocica-action/ready` before the first go command) | No | `ready` |
+| `tmpfs` | Put `GOMODCACHE` and the store on a RAM-backed tmpfs (Linux, passwordless sudo, 8 GiB available) | No | `false` |
+| `tmpfs-size` | Size limit of that mount; a ceiling, not a reservation | No | `10g` |
 | `remote` | Cache backend (`s3`, `github`) | No | `github` |
 | `s3-region` | [AWS region](https://docs.aws.amazon.com/general/latest/gr/s3.html) for S3 | No | |
 | `s3-bucket` | S3 bucket name | No | |
