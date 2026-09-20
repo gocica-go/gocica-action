@@ -138,6 +138,9 @@ jobs:
         run: |
           echo "GOMODCACHE=$GOMODCACHE"
           echo "GOPROXY=$GOPROXY"
+          # findmnt needs the path to exist, and an empty module cache has not
+          # been created yet: nothing was restored into it.
+          mkdir -p "$GOMODCACHE"
           fstype=$(findmnt -no FSTYPE -T "$GOMODCACHE")
           [ "$fstype" = tmpfs ] || { echo "GOMODCACHE is on $fstype, not tmpfs" >&2; exit 1; }
           case "$GOPROXY" in
